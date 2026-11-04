@@ -1,0 +1,278 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{iftex}
+\ifPDFTeX
+    \usepackage[utf8]{inputenc}
+\fi
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+    pdftitle={Laboratorio 12: Programación funcional},
+    pdfauthor={Juan Jose Rivas Alvarez}
+}
+
+\lstdefinelanguage{JavaScript}{
+    keywords={const,let,if,return,throw,new,typeof,true,false},
+    sensitive=true,
+    comment=[l]{//},
+    morestring=[b]",
+    morestring=[b]'
+}
+\lstset{
+    language=JavaScript,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue!55!black},
+    commentstyle=\color{black!55},
+    stringstyle=\color{green!35!black},
+    frame=single,
+    rulecolor=\color{black!25},
+    breaklines=true,
+    columns=fullflexible,
+    keepspaces=true,
+    showstringspaces=false,
+    tabsize=4,
+    literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1
+             {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
+}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\newcommand{\TRUE}{\mathsf{TRUE}}
+\newcommand{\FALSE}{\mathsf{FALSE}}
+\newcommand{\NOT}{\mathsf{NOT}}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\Large Teoría de la Computación\par}
+    \vspace{1.5cm}
+    {\Huge\bfseries Laboratorio 12\par}
+    \vspace{0.5cm}
+    {\LARGE Problema 1: Programación funcional\par}
+    \vspace{2cm}
+    {\large Juan Jose Rivas Alvarez\par}
+    {\large Carnet universitario: 24856\par}
+    \vfill
+    {\large 4 de noviembre de 2026\par}
+\end{titlepage}
+\pagenumbering{arabic}
+\hypersetup{pageanchor=true}
+
+\section{Inciso A: Reducción beta de NOT}
+\subsection{Definiciones y regla de sustitución}
+En cálculo lambda, una función se escribe $\lambda x.M$: recibe un argumento
+$x$ y devuelve el cuerpo $M$. La reducción beta aplica una función a un
+argumento sustituyendo sus apariciones libres en el cuerpo:
+\[
+    (\lambda x.M)\,N \longrightarrow_\beta M[x:=N].
+\]
+La sustitución debe evitar capturar variables libres; cuando es necesario,
+se renombran variables ligadas (conversión alfa). En las reducciones siguientes
+los argumentos sustituidos son términos cerrados y no ocurre captura.
+La aplicación se asocia a la izquierda: $p\,a\,b=(p\,a)\,b$.
+
+Los booleanos de Church seleccionan uno de dos argumentos:
+\[
+    \TRUE=\lambda x.\lambda y.x,\qquad
+    \FALSE=\lambda x.\lambda y.y,\qquad
+    \NOT=\lambda p.p\,\FALSE\,\TRUE.
+\]
+\subsection{Demostración de NOT TRUE}
+\begin{align*}
+    \NOT\,\TRUE
+    &= (\lambda p.p\,\FALSE\,\TRUE)\,\TRUE \\
+    &\longrightarrow_\beta \TRUE\,\FALSE\,\TRUE
+        && [p:=\TRUE] \\
+    &= ((\lambda x.\lambda y.x)\,\FALSE)\,\TRUE \\
+    &\longrightarrow_\beta (\lambda y.\FALSE)\,\TRUE
+        && [x:=\FALSE] \\
+    &\longrightarrow_\beta \FALSE
+        && [y:=\TRUE] \\
+    &= \lambda x.\lambda y.y.
+\end{align*}
+La última sustitución no cambia el cuerpo porque $y$ no aparece libre en
+$\FALSE$. Como $\TRUE$ selecciona el primer argumento y NOT coloca
+$\FALSE$ en esa posición, el resultado es $\FALSE$.
+
+\subsection{Demostración de NOT FALSE}
+\begin{align*}
+    \NOT\,\FALSE
+    &= (\lambda p.p\,\FALSE\,\TRUE)\,\FALSE \\
+    &\longrightarrow_\beta \FALSE\,\FALSE\,\TRUE
+        && [p:=\FALSE] \\
+    &= ((\lambda x.\lambda y.y)\,\FALSE)\,\TRUE \\
+    &\longrightarrow_\beta (\lambda y.y)\,\TRUE
+        && [x:=\FALSE] \\
+    &\longrightarrow_\beta \TRUE
+        && [y:=\TRUE] \\
+    &= \lambda x.\lambda y.x.
+\end{align*}
+Aquí $x$ no aparece en el cuerpo $\lambda y.y$, así que la primera aplicación
+lo deja igual. Como $\FALSE$ selecciona el segundo argumento, devuelve $\TRUE$.
+
+\newpage
+\section{Inciso B: Recursión y ciclos}
+\subsection{Recursión y caso base}
+La recursión consiste en que una función resuelve un problema mediante
+llamadas a sí misma con entradas más pequeñas. En programación funcional
+permite expresar repeticiones sin actualizar un contador externo.
+
+Un caso base resuelve directamente una entrada sencilla y detiene las
+llamadas. También debe existir progreso hacia él: tener un caso base no
+garantiza terminar si cada llamada se aleja de ese caso.
+
+El factorial de un entero no negativo se define como:
+\[
+    n! = \begin{cases}
+        1 & \text{si } n=0,\\
+        n\,(n-1)! & \text{si } n>0.
+    \end{cases}
+\]
+\begin{lstlisting}
+const factorial = numero => {
+    if (!Number.isInteger(numero) || numero < 0) {
+        throw new Error("Se requiere un entero no negativo.");
+    }
+    return numero === 0 ? 1 : numero * factorial(numero - 1);
+};
+console.log(factorial(0)); // 1
+console.log(factorial(5)); // 120
+\end{lstlisting}
+Por ejemplo, $3!=3\cdot2!=3\cdot2\cdot1!=3\cdot2\cdot1\cdot0!
+=3\cdot2\cdot1\cdot1=6$. Cada llamada reduce el argumento en uno hasta cero.
+
+\subsection{Representar un ciclo mediante recursión}
+Un ciclo tiene un estado, una condición de parada y una actualización.
+En una versión recursiva, el estado pasa como argumento, la condición se
+convierte en el caso base y la actualización produce la siguiente llamada.
+Este ejemplo suma desde 1 hasta un entero $n\geq0$:
+\begin{lstlisting}
+const sumarHasta = n => n === 0 ? 0 : n + sumarHasta(n - 1);
+console.log(sumarHasta(4)); // 10
+\end{lstlisting}
+El ejemplo presupone un entero no negativo. Con un valor negativo no se
+alcanzaría el cero. En una función de uso general se debe validar esa entrada,
+como se hace en el factorial.
+
+Estas implementaciones usan una pila de llamadas de profundidad proporcional
+a $n$. En Node.js, entradas grandes pueden desbordarla; tampoco se debe
+suponer optimización de llamadas finales. El factorial con \texttt{Number}
+puede perder precisión y finalmente producir \texttt{Infinity} para valores
+grandes. Los ejemplos usan valores pequeños para ilustrar el concepto.
+
+\newpage
+\subsection{Funciones de orden superior}
+Una función de orden superior recibe funciones como argumentos o devuelve una
+función. Los métodos \texttt{map}, \texttt{filter} y \texttt{reduce} reciben
+una función flecha que describe la operación para cada elemento:
+\begin{itemize}
+    \item \texttt{map}: transforma cada elemento y devuelve un nuevo arreglo.
+    \item \texttt{filter}: conserva los elementos cuyo predicado es verdadero.
+    \item \texttt{reduce}: combina los elementos en un resultado acumulado.
+\end{itemize}
+\begin{lstlisting}
+const numeros = [1, 2, 3, 4, 5];
+const dobles = numeros.map(numero => numero * 2);
+const pares = numeros.filter(numero => numero % 2 === 0);
+const suma = numeros.reduce((total, numero) => total + numero, 0);
+
+console.log(dobles); // [2, 4, 6, 8, 10]
+console.log(pares);  // [2, 4]
+console.log(suma);   // 15
+console.log(numeros); // [1, 2, 3, 4, 5]
+\end{lstlisting}
+Para duplicar una lista, un ciclo tradicional recorrería sus posiciones y
+agregaría cada doble a un arreglo de salida. \texttt{map} expresa directamente
+esa transformación sin administrar el índice ni modificar la lista de entrada.
+El valor inicial cero de \texttt{reduce} también permite sumar una lista vacía
+y obtener cero.
+
+\subsection{Diferencia entre los conceptos}
+La recursión describe cómo una función se llama a sí misma. El orden superior
+describe cómo una función recibe o devuelve otras funciones. No son
+equivalentes: \texttt{factorial} es recursiva, pero no recibe ni devuelve
+funciones; usar \texttt{map} no exige escribir recursión explícita. Ambos
+conceptos pueden combinarse y son comunes en programación funcional.
+
+Los métodos de arreglos realizan el recorrido internamente. Utilizarlos no
+elimina el trabajo de recorrer los elementos ni garantiza que internamente
+se use recursión. Además, el estilo funcional requiere cuidar las funciones
+recibidas: un callback puede tener efectos secundarios o modificar objetos.
+En estos ejemplos los callbacks únicamente calculan valores.
+
+\subsection{Relación con la demostración ejecutable}
+El archivo \texttt{demostracion.js} implementa los booleanos de Church como
+funciones que devuelven funciones:
+\begin{lstlisting}
+const TRUE = x => y => x;
+const FALSE = x => y => y;
+const NOT = p => p(FALSE)(TRUE);
+const aBooleano = booleano => booleano(true)(false);
+console.log(aBooleano(NOT(TRUE)));  // false
+console.log(aBooleano(NOT(FALSE))); // true
+\end{lstlisting}
+Los booleanos de JavaScript se usan solamente para mostrar el resultado:
+NOT trabaja con las funciones de Church, de acuerdo con las reducciones.
+
+\newpage
+\section{Inciso C: Cuándo utilizar programación funcional}
+\subsection{Situaciones recomendables y ventajas}
+Es recomendable cuando el problema consiste en transformar, filtrar y resumir
+datos: reportes, procesamiento de listas o validaciones. Las funciones puras
+devuelven el mismo resultado para las mismas entradas y no cambian estado
+externo. Esto facilita las pruebas, la reutilización y el razonamiento local.
+Evitar cambios en datos compartidos reduce errores por efectos secundarios.
+
+Por ejemplo, un reporte puede sumar los importes de ventas pagadas:
+\begin{lstlisting}
+const ventas = [
+    { importe: 100, pagada: true },
+    { importe: 50, pagada: false },
+    { importe: 80, pagada: true }
+];
+const totalPagado = ventas => ventas
+    .filter(venta => venta.pagada)
+    .map(venta => venta.importe)
+    .reduce((total, importe) => total + importe, 0);
+
+console.log(totalPagado(ventas)); // 180
+\end{lstlisting}
+La operación es legible, no cambia las ventas y se puede probar con una lista
+vacía, ventas pendientes y ventas pagadas. La composición de pasos pequeños
+ayuda a expresar qué cálculo se busca. No implica ejecución paralela
+automática en JavaScript.
+
+\subsection{Situaciones menos convenientes y limitaciones}
+Un enfoque exclusivamente funcional puede resultar menos práctico al manejar
+entrada y salida, interfaces o simulaciones que actualizan mucho estado en
+cada instante. Copiar grandes estructuras continuamente puede aumentar el
+uso de memoria y el trabajo del recolector de basura. La recursión profunda
+también puede agotar la pila, y un exceso de abstracciones reduce la claridad.
+
+Un ejemplo es una animación con miles de partículas que cambia sus posiciones
+en cada fotograma. Una actualización local y controlada puede ser más simple:
+\begin{lstlisting}
+const particula = { x: 0, velocidad: 2 };
+const avanzar = (estado, segundos) => {
+    estado.x += estado.velocidad * segundos;
+};
+avanzar(particula, 0.5);
+console.log(particula.x); // 1
+\end{lstlisting}
+\texttt{avanzar} tiene un efecto secundario: modifica el objeto recibido, por
+lo que no es pura. La alternativa pura sería devolver
+\texttt{\{ ...estado, x: estado.x + estado.velocidad * segundos \}}.
+Ambas son válidas; la elección depende de claridad, volumen de datos y
+mediciones de rendimiento. El estilo funcional también puede servir en juegos,
+pero imponerlo a cada actualización no siempre aporta ventajas.
+
+En una aplicación real conviene mantener los cálculos puros cuando faciliten
+la solución y controlar los efectos secundarios donde sean necesarios.
+
+\end{document}

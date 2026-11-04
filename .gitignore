@@ -1,0 +1,14 @@
+# Archivos auxiliares de LaTeX; conservar el fuente y el PDF final.
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Archivos locales y temporales.
+node_modules/
+tmp/
+.DS_Store
+Thumbs.db
