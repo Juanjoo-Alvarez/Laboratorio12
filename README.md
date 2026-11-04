@@ -152,21 +152,5 @@ El PDF escribe `café` y la solicitud de implementación escribe `cafe`. El prog
 
 ## Video de demostración del Problema 1
 
-[Enlace al video de YouTube pendiente]
 
-Grabar un video de máximo 10 minutos explicando las reducciones de NOT, ejecutando `node Problema1/demostracion.js` y mostrando el factorial y las operaciones de listas. Subirlo a YouTube como video no listado y sustituir el marcador anterior por su enlace. No se ha generado ni subido un video automáticamente.
 
-## Entrega en GitHub
-
-Antes de publicar, grabar el video y actualizar su enlace. Si se modifica el fuente LaTeX, volver a compilar y revisar el PDF. Crear un repositorio vacío en GitHub y, desde esta carpeta, ejecutar:
-
-```sh
-git init
-git add .
-git commit -m "Completar Laboratorio 12 de Teoría de la Computación"
-git branch -M main
-git remote add origin URL_DEL_REPOSITORIO
-git push -u origin main
-```
-
-Reemplazar `URL_DEL_REPOSITORIO` por la URL real del repositorio. No se ha creado ni publicado un repositorio remoto desde este entorno.
